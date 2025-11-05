@@ -15,8 +15,10 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera."
-      }
+        "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "ios"
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +27,6 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "android.permission.CAMERA",
         "android.permission.CAMERA"
       ],
       "package": "com.anonymous.MacroView"
@@ -34,7 +35,17 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-  
-    ]
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "$(PRODUCT_NAME) needs access to your Camera."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "58f3db1b-4cee-4537-880e-a1a21ae0a31b"
+      }
+    }
   }
 }
