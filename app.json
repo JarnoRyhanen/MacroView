@@ -27,6 +27,7 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
+        "android.permission.CAMERA",
         "android.permission.CAMERA"
       ],
       "package": "com.anonymous.MacroView"
@@ -40,12 +41,24 @@
         {
           "cameraPermissionText": "$(PRODUCT_NAME) needs access to your Camera."
         }
+      ],
+      [
+        "expo-dev-client",
+        {
+          "launchMode": "launcher"
+        }
       ]
     ],
     "extra": {
       "eas": {
         "projectId": "58f3db1b-4cee-4537-880e-a1a21ae0a31b"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/58f3db1b-4cee-4537-880e-a1a21ae0a31b"
     }
   }
 }
