@@ -1,11 +1,27 @@
-import { useEffect } from 'react';
+import { useAppState } from '@react-native-community/hooks';
+import { useIsFocused } from '@react-navigation/native';
+import { useEffect, useRef, useState } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
+import { Camera, useCameraDevice, useCameraPermission, useFrameProcessor } from 'react-native-vision-camera';
+import { useImageLabeler } from 'react-native-vision-camera-v3-image-labeling';
 
 export default function CameraScreen() {
 
   const { hasPermission, requestPermission } = useCameraPermission()
   const device = useCameraDevice('back')
+  const camera = useRef(null);
+  const isFocused = useIsFocused();
+  const appState = useAppState();
+  const isActive = isFocused && appState === "active"
+
+  const options = { minConfidence: 0.8 };
+  const { scanImage } = useImageLabeler(options);
+
+  const frameProcessor = useFrameProcessor((frame) => {
+    'worklet'
+    const data = scanImage(frame);
+    console.log(data[0]);
+  }, []);
 
   useEffect(() => {
     if (!hasPermission) {
@@ -25,9 +41,11 @@ export default function CameraScreen() {
     <View style={styles.container}>
       {device && (
         <Camera
+          ref={camera}
           style={StyleSheet.absoluteFill}
           device={device}
-          isActive={true}
+          isActive={isActive}
+          frameProcessor={frameProcessor}
         />
       )}
 
