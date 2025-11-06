@@ -47,6 +47,12 @@
         {
           "launchMode": "launcher"
         }
+      ],
+      [
+        "react-native-fast-tflite",
+        {
+          "enableAndroidGpuLibraries": true
+        }
       ]
     ],
     "extra": {
