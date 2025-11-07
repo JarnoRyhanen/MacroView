@@ -33,9 +33,10 @@ export default function CameraScreen() {
     (frame) => {
       'worklet'
 
-      runAtTargetFps(3, () => {
+      const targetFPS = 3
+      runAtTargetFps(targetFPS, () => {
         'worklet'
-        console.log("I'm running synchronously at 3 FPS!")
+        console.log(`I'm running synchronously at ${targetFPS} FPS!`)
         if (model == null) return
 
         const resized = resize(frame, {

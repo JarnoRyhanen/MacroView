@@ -17,25 +17,26 @@ export const loadLabels = () => {
 
 export const getBestPrediction = (outputArray, labels) => {
     'worklet'
+    
     if (!outputArray || outputArray.length === 0) return "No prediction";
 
-    const probabilities = outputArray[0];
-    if (!probabilities || probabilities.length === 0) return "No prediction";
-
-    let maxProbability = -Infinity;
+    let maxProbability = 0;
     let predictedIndex = -1;
 
-    for (let i = 0; i < probabilities.length; i++) {
-        if (probabilities[i] > maxProbability) {
-            maxProbability = probabilities[i];
+    for (let i = 0; i < 1000; i++) {
+        if (outputArray[i] > maxProbability) {
+            maxProbability = outputArray[i];
             predictedIndex = i;
         }
     }
+    console.log("Max probability: " + maxProbability);
+    console.log("Predicted index: " + predictedIndex);
+    console.log("predicted label: " + labels[0][predictedIndex])
 
     if (predictedIndex !== -1 && maxProbability > 0.5) {
-        const label = (labels && labels[predictedIndex]) ? labels[predictedIndex] : `Unknown Class (Index: ${predictedIndex})`;
+        const label = (labels[0] && labels[0][predictedIndex]) ? labels[0][predictedIndex] : `Unknown Class (Index: ${predictedIndex})`;
         const confidence = (maxProbability * 100).toFixed(2);
-        console.log(`${label} (${confidence}%`);
+        console.log(`${label} (${confidence}%)`);
         return `${label} (${confidence}%)`;
     }
 
