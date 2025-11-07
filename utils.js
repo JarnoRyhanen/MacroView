@@ -35,8 +35,8 @@ export const getBestPrediction = (outputArray, labels) => {
     if (predictedIndex !== -1 && maxProbability > 0.5) {
         const label = (labels && labels[predictedIndex]) ? labels[predictedIndex] : `Unknown Class (Index: ${predictedIndex})`;
         const confidence = (maxProbability * 100).toFixed(2);
-/*         console.log(`${label} (${confidence}%`);
- */        return `${label} (${confidence}%)`;
+        console.log(`${label} (${confidence}%`);
+        return `${label} (${confidence}%)`;
     }
 
     return "No object detected (Confidence too low)";
