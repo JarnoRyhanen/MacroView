@@ -7,7 +7,7 @@ import { Camera, runAtTargetFps, useCameraDevice, useCameraPermission, useFrameP
 import { useResizePlugin } from 'vision-camera-resize-plugin';
 import { getBestPrediction, loadLabels } from "../utils"
 import { useRunOnJS } from 'react-native-worklets-core';
-export default function CameraScreen() {
+export default function CameraScreen({ navigation }) {
 
   const [labels, setLabels] = useState([]);
   const [result, setResult] = useState("Initializing...");
@@ -25,8 +25,8 @@ export default function CameraScreen() {
 
   const calculateResult = useRunOnJS((outputs) => {
     const result = getBestPrediction(outputs[0], labels);
-    console.log(result);
-    setResult(result);
+    const parsedResult = result.split(" ")[0].trim();
+    setResult(parsedResult);
   });
 
   const frameProcessor = useFrameProcessor(
@@ -66,7 +66,7 @@ export default function CameraScreen() {
   }
 
   const scan = () => {
-    console.log("Scanned");
+    navigation.navigate('DataScreen', { result });
   }
 
   return (
