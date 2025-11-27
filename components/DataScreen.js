@@ -1,17 +1,25 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Button } from 'react-native';
-import { fetchItemId, fetchItemData } from '../mockUtils';
+//import { fetchItemId, fetchItemData } from '../mockUtils';
+import { fetchItemId, fetchItemData } from '../utils';
 import { FoodLabel } from './foodLabel';
-
+import * as SQLite from 'expo-sqlite';
+import { saveToDatabase } from '../schema';
 
 export default function DataScreen({ route }) {
     const params = route?.params || {};
-    const item = /* params.result ?? null */ "lemon";
+    const item = params.result ?? null /* "lemon" */;
     const parsedItem = item.split('(')[0].split(",")[0].trim();
 
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    const db = SQLite.openDatabaseSync('ingredientdb');
+    const saveItem = () => {
+        saveToDatabase(data, db)
+            .catch(err => console.error('Save error:', err));
+    }
 
     useEffect(() => {
         if (!item) {
@@ -46,11 +54,6 @@ export default function DataScreen({ route }) {
 
         return () => { isMounted = false; };
     }, [parsedItem]);
-
-    const saveItem = () => {
-        console.log("Saved");
-        
-    }
 
     return (
         <ScrollView contentContainerStyle={styles.container}>

@@ -6,6 +6,12 @@ import HomeScreen from './components/HomeScreen';
 import DataScreen from './components/DataScreen';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import CameraScreen from './components/CameraScreen';
+import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
+import { createDatabase } from './schema';
+import * as SQLite from "expo-sqlite";
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, View, Text } from 'react-native';
+
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -27,7 +33,39 @@ function Tabs() {
   );
 }
 
+const initialize = async (db) => {
+
+  createDatabase(db)
+    .then(() => console.log('✅ Database tables created/verified.'))
+    .catch(error => console.error('❌ Failed to initialize database tables:', error));
+};
+
 export default function App() {
+  const [db, setDb] = useState(null);
+  const [dbInitialized, setDbInitialized] = useState(false);
+
+  useEffect(() => {
+    if (!dbInitialized) {
+      const dbConnection = SQLite.openDatabaseSync('ingredientdb');
+      setDb(dbConnection);
+      initialize(dbConnection).finally(() => {
+        setDbInitialized(true);
+      });
+    }
+    console.log('Database connection opened.');
+  }, []);
+
+  useDrizzleStudio(db);
+
+  if (!dbInitialized) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+        <Text style={{ marginTop: 10 }}>Initializing database...</Text>
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator>
