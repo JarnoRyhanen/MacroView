@@ -33,7 +33,7 @@ export const getBestPrediction = (outputArray, labels) => {
     console.log("Predicted index: " + predictedIndex);
     console.log("predicted label: " + labels[0][predictedIndex])
 
-    if (predictedIndex !== -1 && maxProbability > 0.5) {
+    if (predictedIndex !== -1 && maxProbability > 0.3) {
         const label = (labels[0] && labels[0][predictedIndex]) ? labels[0][predictedIndex] : `Unknown Class (Index: ${predictedIndex})`;
         const confidence = (maxProbability * 100).toFixed(2);
         console.log(`${label} (${confidence}%)`);
@@ -62,7 +62,6 @@ export const fetchItemData = async (id) => {
         const response = await fetch(`https://api.spoonacular.com/food/ingredients/${id}/information?apiKey=${apiKey}&unit=grams&amount=100`);
         if (!response.ok) throw new Error("Error in fetch: " + response.statusText);
         const data = await response.json();
-        console.log(data);
         return data;
     }
     catch (error) {

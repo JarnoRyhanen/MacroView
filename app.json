@@ -53,7 +53,8 @@
         {
           "enableAndroidGpuLibraries": true
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "extra": {
       "eas": {

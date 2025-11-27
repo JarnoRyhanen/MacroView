@@ -25,8 +25,7 @@ export default function CameraScreen({ navigation }) {
 
   const calculateResult = useRunOnJS((outputs) => {
     const result = getBestPrediction(outputs[0], labels);
-    const parsedResult = result.split(" ")[0].trim();
-    setResult(parsedResult);
+    setResult(result);
   });
 
   const frameProcessor = useFrameProcessor(
@@ -66,7 +65,7 @@ export default function CameraScreen({ navigation }) {
   }
 
   const scan = () => {
-    navigation.navigate('DataScreen', { result });
+    //  navigation.navigate('DataScreen', { result });
   }
 
   return (

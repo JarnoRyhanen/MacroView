@@ -15,13 +15,14 @@ function Tabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
-          let iconName = route.name === 'Home' ? 'home' : route.name === 'Search' ? 'search' : 'camera';
+          let iconName = route.name === 'Home' ? 'home' : route.name === 'Search' ? 'search' : route.name === 'Camera' ? 'camera' : 'data';
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}>
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Search" component={SearchScreen} />
       <Tab.Screen name="Camera" component={CameraScreen} />
+      <Tab.Screen name="Data" component={DataScreen} />
     </Tab.Navigator>
   );
 }

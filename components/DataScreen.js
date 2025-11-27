@@ -1,41 +1,76 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { fetchItemId, fetchItemData } from '../utils';
+import { useEffect, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Button } from 'react-native';
+import { fetchItemId, fetchItemData } from '../mockUtils';
+import { FoodLabel } from './foodLabel';
+
 
 export default function DataScreen({ route }) {
     const params = route?.params || {};
-    const item = params.result ?? null;
+    const item = /* params.result ?? null */ "lemon";
+    const parsedItem = item.split('(')[0].split(",")[0].trim();
+
     const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        let mounted = true;
-        if (!item) return;
+        if (!item) {
+            setData(null);
+            return;
+        }
 
-        (async () => {
+        let isMounted = true;
+
+        const loadItemData = async () => {
+            setLoading(true);
+            setError(null);
+
             try {
-                const id = await fetchItemId(item);
-                if (!mounted) return;
-
+                const id = await fetchItemId(parsedItem);
+                if (!isMounted) return;
                 const itemData = await fetchItemData(id);
-                if (!mounted) return;
+                if (!isMounted) return;
                 setData(itemData);
-            } catch (error) {
-                console.error('Failed to load item data:', error);
+            } catch (err) {
+                console.error('Failed to load item data:', err);
+                setError('Failed to load data. Please check your mock utilities.');
+                setData(null);
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
-        })();
+        };
 
-        return () => { mounted = false; };
-    }, [item]);
+        loadItemData();
+
+        return () => { isMounted = false; };
+    }, [parsedItem]);
+
+    const saveItem = () => {
+        console.log("Saved");
+        
+    }
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            {data ? (
-                <View>
-                    <Text style={styles.title}>{data.name ?? 'Item details'}</Text>
-                    <Text style={styles.json}>{JSON.stringify(data, null, 2)}</Text>
+            {loading ? (
+                <View style={styles.centered}>
+                    <ActivityIndicator size="large" color="#0000ff" />
+                    <Text style={{ marginTop: 10 }}>Loading details for "{String(parsedItem)}"...</Text>
                 </View>
-            ) : item ? (
-                <Text>Loading details for "{String(item)}"...</Text>
+            ) : error ? (
+                <Text style={styles.errorText}>❌ {error}</Text>
+            ) : data ? (
+                <>
+                    <FoodLabel itemData={data} />
+                    <Button
+                        title='Save'
+                        onPress={() => saveItem()}
+                    />
+                </>
+            ) : parsedItem ? (
+                <Text>No data loaded for "{String(parsedItem)}".</Text>
             ) : (
                 <Text>No item provided.</Text>
             )}
@@ -44,7 +79,21 @@ export default function DataScreen({ route }) {
 }
 
 const styles = StyleSheet.create({
-    container: { padding: 16 },
-    title: { fontSize: 18, fontWeight: '600', marginBottom: 8 },
-    json: { fontFamily: 'monospace' },
+    container: {
+        padding: 16,
+        flexGrow: 1,
+        backgroundColor: '#f9f9f9',
+    },
+    centered: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 16,
+        fontWeight: '500',
+        textAlign: 'center',
+        marginTop: 20,
+    },
 });
