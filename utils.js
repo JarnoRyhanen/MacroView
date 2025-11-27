@@ -17,7 +17,7 @@ export const loadLabels = () => {
 
 export const getBestPrediction = (outputArray, labels) => {
     'worklet'
-    
+
     if (!outputArray || outputArray.length === 0) return "No prediction";
 
     let maxProbability = 0;
@@ -26,9 +26,10 @@ export const getBestPrediction = (outputArray, labels) => {
     for (let i = 0; i < 1000; i++) {
         if (outputArray[i] > maxProbability) {
             maxProbability = outputArray[i];
-            predictedIndex = i;
-        }
-    }
+            predictedIndex = i - 1;
+        };
+    };
+    
     console.log("Max probability: " + maxProbability);
     console.log("Predicted index: " + predictedIndex);
     console.log("predicted label: " + labels[0][predictedIndex])

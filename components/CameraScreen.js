@@ -33,7 +33,7 @@ export default function CameraScreen() {
     (frame) => {
       'worklet'
 
-      const targetFPS = 3
+      const targetFPS = 1
       runAtTargetFps(targetFPS, () => {
         'worklet'
         console.log(`I'm running synchronously at ${targetFPS} FPS!`)
