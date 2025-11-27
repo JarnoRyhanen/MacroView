@@ -1,4 +1,3 @@
-
 import labels from "./assets/imagenet_labels.json";
 export const loadLabels = () => {
     try {
@@ -29,7 +28,7 @@ export const getBestPrediction = (outputArray, labels) => {
             predictedIndex = i - 1;
         };
     };
-    
+
     console.log("Max probability: " + maxProbability);
     console.log("Predicted index: " + predictedIndex);
     console.log("predicted label: " + labels[0][predictedIndex])
@@ -43,3 +42,31 @@ export const getBestPrediction = (outputArray, labels) => {
 
     return "No object detected (Confidence too low)";
 };
+
+const apiKey = process.env.EXPO_PUBLIC_API_KEY;
+
+export const fetchItemId = async (item) => {
+    try {
+        const response = await fetch(`https://api.spoonacular.com/food/ingredients/search?query=${item}&apiKey=${apiKey}&sortDirection=asc&number=1`);
+        if (!response.ok) throw new Error("Error in fetch:" + response.statusText);
+        const data = await response.json();
+        return data.results[0].id;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+export const fetchItemData = async (id) => {
+    try {
+        const response = await fetch(`https://api.spoonacular.com/food/ingredients/${id}/information?apiKey=${apiKey}&unit=grams&amount=100`);
+        if (!response.ok) throw new Error("Error in fetch: " + response.statusText);
+        const data = await response.json();
+        console.log(data);
+        return data;
+    }
+    catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
