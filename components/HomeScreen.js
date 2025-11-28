@@ -50,7 +50,7 @@ export default function HomeScreen({ navigation }) {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.card} onPress={() => {
-      navigation.navigate('DataScreen', { result: item.name, useApi: false })
+      navigation.navigate('DataScreen', { result: item.name, itemId: item.id })
     }
     }>
       <Image source={{ uri: item.image }} style={styles.image} />

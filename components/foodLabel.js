@@ -1,6 +1,6 @@
 import { View, Text, Image, StyleSheet } from 'react-native';
 
-export function FoodLabel({ itemData }) {
+export function FoodLabel({ itemData, id }) {
     if (!itemData) {
         return <Text>No item data to display on label.</Text>;
     }
@@ -18,7 +18,6 @@ export function FoodLabel({ itemData }) {
 
     const nutrients = nutrition?.nutrients || [];
     const caloricBreakdown = nutrition?.caloricBreakdown;
-    const weightPerServing = nutrition?.weightPerServing;
 
     const NutrientRow = ({ label, value, unit, dailyPercent = null, bold = false }) => (
         <View style={styles.nutrientRow}>
@@ -42,12 +41,20 @@ export function FoodLabel({ itemData }) {
             <View style={styles.separator} />
 
             {image && (
-                <Image
-                    source={{ uri: `https://spoonacular.com/cdn/ingredients_100x100/${image}` }}
-                    style={styles.itemImage}
-                    resizeMode="contain"
-                    onError={(e) => console.warn('Image load error:', e.nativeEvent?.error)}
-                />
+                id ? (
+                    <Image
+                        source={{ uri: image }}
+                        style={styles.itemImage}
+                        resizeMode="contain"
+                        onError={(e) => console.warn('Image load error:', e.nativeEvent?.error)}
+                    />
+                ) : (
+                    <Image
+                        source={{ uri: `https://spoonacular.com/cdn/ingredients_100x100/${image}` }}
+                        style={styles.itemImage}
+                        resizeMode="contain"
+                        onError={(e) => console.warn('Image load error:', e.nativeEvent?.error)}
+                    />)
             )}
 
             <Text style={styles.itemName}>{name || originalName}</Text>
@@ -56,7 +63,7 @@ export function FoodLabel({ itemData }) {
             )}
 
             <View style={styles.servingInfo}>
-                <Text style={styles.servingSize}>Serving Size: {weightPerServing?.amount} {weightPerServing?.unit || unitShort}</Text>
+                <Text style={styles.servingSize}>Serving Size: {amount} {unitShort}</Text>
             </View>
             <View style={styles.doubleSeparator} />
 

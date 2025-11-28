@@ -75,10 +75,56 @@ export const saveToDatabase = async (data, db) => {
             );
         }
         console.log("Data successfully stored in the database");
-        
+
         return;
     } catch (error) {
         console.error("Could not add item, " + error);
     }
+}
 
+export const fetchItemFromDatabase = async (id, db) => {
+    if (!id) throw new Error('No id provided to fetchItemFromDatabase');
+    try {
+
+        const ingredinentRow = await db.getAllAsync('SELECT * FROM ingredient WHERE id = ?;', id);
+        if (ingredinentRow.length === 0) {
+            throw new Error('No ingredient found with that ID');
+        }
+        const ingredient = ingredinentRow[0];
+
+        const cbRows = await db.getAllAsync('SELECT * FROM caloric_breakdown WHERE ingredient_id = ?;', id);
+        const cb = cbRows && cbRows.length ? {
+            percentProtein: cbRows[0].percentProtein,
+            percentFat: cbRows[0].percentFat,
+            percentCarbs: cbRows[0].percentCarbs
+        } : null;
+
+        const nutrientRows = await db.getAllAsync('SELECT * FROM nutrient WHERE ingredient_id = ?;', id);
+        const nutrients = nutrientRows.map(nutrient => ({
+            name: nutrient.name,
+            amount: nutrient.amount,
+            unit: nutrient.unit,
+            percentOfDailyNeeds: nutrient.percentOfDailyNeeds
+        }));
+
+        const itemData = {
+            id: ingredient.id,
+            name: ingredient.name,
+            amount: ingredient.amount,
+            unitShort: ingredient.unitShort,
+            aisle: ingredient.aisle,
+            image: ingredient.image,
+            categoryPath: (() => {
+                try { return JSON.parse(ingredient.categoryPath ?? '[]'); } catch { return []; }
+            })(),
+            nutrition: {
+                caloricBreakdown: cb,
+                nutrients
+            }
+        };
+        return itemData;
+    } catch (err) {
+        console.error('Database fetch failed', err);
+        throw err;
+    }
 }

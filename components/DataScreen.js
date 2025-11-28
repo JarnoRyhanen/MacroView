@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Button } from 'react-native';
-import { fetchItemId as mockFetchItemId, fetchItemData as mockFetchItemData } from '../mockUtils';
 import { fetchItemId, fetchItemData } from '../utils';
 import { FoodLabel } from './foodLabel';
 import * as SQLite from 'expo-sqlite';
-import { saveToDatabase } from '../schema';
+import { fetchItemFromDatabase, saveToDatabase } from '../schema';
 
-export default function DataScreen({ route }) {
+export default function DataScreen({ route, navigation }) {
     const params = route?.params || {};
-    const useApi = params.useApi;
     const item = params.result;
+    const itemId = params.itemId || null;
+
     const parsedItem = item.split('(')[0].split(",")[0].trim();
 
     const [data, setData] = useState(null);
@@ -17,12 +17,35 @@ export default function DataScreen({ route }) {
     const [error, setError] = useState(null);
 
     const db = SQLite.openDatabaseSync('ingredientdb');
+
     const saveItem = () => {
         saveToDatabase(data, db)
-            .catch(err => console.error('Save error:', err));
+            .catch(err => console.error('Save error:', err))
+            .finally(db.closeSync());
+        navigation.navigate('Main', { screen: 'Home' });
     }
 
+    const fetchItem = async () => {
+        if (!db) {
+            console.error('DB not available');
+            setError('Local database unavailable.');
+            setLoading(false);
+            return;
+        }
+        try {
+            const data = await fetchItemFromDatabase(itemId, db);
+            setData(data);
+        } catch (err) {
+            console.error('Local DB fetch error:', err);
+            setError('Failed to load item from saved list.');
+        } finally {
+            setLoading(false);
+            db.closeSync();
+        }
+    };
+
     useEffect(() => {
+
         if (!item) {
             setData(null);
             return;
@@ -31,32 +54,25 @@ export default function DataScreen({ route }) {
         let isMounted = true;
 
         const loadItemData = async () => {
-            setLoading(true);
-            setError(null);
-
             try {
-                console.log("useApi: " + useApi);
-                console.log("Item: " + item);
-                
-                if (!useApi) {
-                    const id = await mockFetchItemId(parsedItem);
-                    if (!isMounted) return;
-                    const itemData = await mockFetchItemData(id);
-                    if (!isMounted) return;
-                    setData(itemData);
-                } else {
-                    const id = await fetchItemId(parsedItem);
-                    if (!isMounted) return;
-                    const itemData = await fetchItemData(id);
-                    if (!isMounted) return;
-                    setData(itemData);
+                setLoading(true);
+                setError(null);
+                if (itemId) {
+                    fetchItem();
+                    return;
                 }
+                const id = await fetchItemId(parsedItem);
+                if (!isMounted) return;
+                const itemData = await fetchItemData(id);
+                if (!isMounted) return;
+                setData(itemData);
+
             } catch (err) {
                 console.error('Failed to load item data:', err);
-                setError('Failed to load data. Please check your mock utilities.');
+                setError('Failed to load data. Please check your utilities.');
                 setData(null);
             } finally {
-                if (isMounted) {
+                if (isMounted && !itemId) {
                     setLoading(false);
                 }
             }
@@ -65,27 +81,26 @@ export default function DataScreen({ route }) {
         loadItemData();
 
         return () => { isMounted = false; };
-    }, [parsedItem]);
+    }, [parsedItem, itemId]);
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
             {loading ? (
                 <View style={styles.centered}>
                     <ActivityIndicator size="large" color="#0000ff" />
-                    <Text style={{ marginTop: 10 }}>Loading details for "{String(parsedItem)}"...</Text>
+                    <Text style={{ marginTop: 10 }}>Loading details for "{parsedItem}"...</Text>
                 </View>
             ) : error ? (
                 <Text style={styles.errorText}>❌ {error}</Text>
             ) : data ? (
                 <>
-                    <FoodLabel itemData={data} />
-                    <Button
+                    <FoodLabel itemData={data} id={itemId}/>
+                    {!itemId && <Button
                         title='Save'
                         onPress={() => saveItem()}
-                    />
+                    />}
+
                 </>
-            ) : parsedItem ? (
-                <Text>No data loaded for "{String(parsedItem)}".</Text>
             ) : (
                 <Text>No item provided.</Text>
             )}
