@@ -48,7 +48,7 @@ export const saveToDatabase = async (data, db) => {
     const amount = data.amount;
     const unitShort = data.unitShort;
     const aisle = data.aisle;
-    const image = data.image;
+    const image = "https://spoonacular.com/cdn/ingredients_100x100/" + data.image;
     const categoryPath = JSON.stringify(data.categoryPath ?? []);
 
     try {

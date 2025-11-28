@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Button } from 'react-native';
-//import { fetchItemId, fetchItemData } from '../mockUtils';
+import { fetchItemId as mockFetchItemId, fetchItemData as mockFetchItemData } from '../mockUtils';
 import { fetchItemId, fetchItemData } from '../utils';
 import { FoodLabel } from './foodLabel';
 import * as SQLite from 'expo-sqlite';
@@ -8,7 +8,8 @@ import { saveToDatabase } from '../schema';
 
 export default function DataScreen({ route }) {
     const params = route?.params || {};
-    const item = params.result ?? null /* "lemon" */;
+    const useApi = params.useApi;
+    const item = params.result;
     const parsedItem = item.split('(')[0].split(",")[0].trim();
 
     const [data, setData] = useState(null);
@@ -34,11 +35,22 @@ export default function DataScreen({ route }) {
             setError(null);
 
             try {
-                const id = await fetchItemId(parsedItem);
-                if (!isMounted) return;
-                const itemData = await fetchItemData(id);
-                if (!isMounted) return;
-                setData(itemData);
+                console.log("useApi: " + useApi);
+                console.log("Item: " + item);
+                
+                if (!useApi) {
+                    const id = await mockFetchItemId(parsedItem);
+                    if (!isMounted) return;
+                    const itemData = await mockFetchItemData(id);
+                    if (!isMounted) return;
+                    setData(itemData);
+                } else {
+                    const id = await fetchItemId(parsedItem);
+                    if (!isMounted) return;
+                    const itemData = await fetchItemData(id);
+                    if (!isMounted) return;
+                    setData(itemData);
+                }
             } catch (err) {
                 console.error('Failed to load item data:', err);
                 setError('Failed to load data. Please check your mock utilities.');

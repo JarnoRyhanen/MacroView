@@ -1,4 +1,5 @@
 import labels from "./assets/imagenet_labels.json";
+
 export const loadLabels = () => {
     try {
         if (!Array.isArray(labels)) {
