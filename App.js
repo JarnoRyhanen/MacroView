@@ -1,16 +1,16 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import SearchScreen from './components/SearchScreen';
-import HomeScreen from './components/HomeScreen';
+import SearchScreen from './src/screens/SearchScreen';
+import HomeScreen from './src/screens/HomeScreen';
+import CameraScreen from './src/screens/CameraScreen';
+import DataScreen from './src/screens/DataScreen';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import CameraScreen from './components/CameraScreen';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
-import { createDatabase } from './schema';
+import { createDatabase } from './src/utils/schema';
 import * as SQLite from "expo-sqlite";
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View, Text } from 'react-native';
-import DataScreen from './components/DataScreen';
 
 
 const Tab = createBottomTabNavigator();

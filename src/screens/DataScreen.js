@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Button } from 'react-native';
-import { fetchItemId, fetchItemData } from '../utils';
-import { FoodLabel } from './foodLabel';
+import { fetchItemId, fetchItemData } from '../utils/utils';
+import { FoodLabel } from '../components/foodLabel';
 import * as SQLite from 'expo-sqlite';
-import { fetchIdWithName, fetchItemFromDatabase, saveToDatabase } from '../schema';
+import { fetchIdWithName, fetchItemFromDatabase, saveToDatabase } from '../utils/schema';
 
 export default function DataScreen({ route, navigation }) {
     const params = route?.params || {};

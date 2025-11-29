@@ -5,8 +5,8 @@ import { Button, StyleSheet, Text, View } from 'react-native';
 import { useTensorflowModel } from 'react-native-fast-tflite';
 import { Camera, runAtTargetFps, useCameraDevice, useCameraPermission, useFrameProcessor } from 'react-native-vision-camera';
 import { useResizePlugin } from 'vision-camera-resize-plugin';
-import { getBestPrediction, loadLabels } from "../utils"
 import { useRunOnJS } from 'react-native-worklets-core';
+import { getBestPrediction, loadLabels, } from '../utils/utils';
 export default function CameraScreen({ navigation }) {
 
   const [labels, setLabels] = useState([]);
@@ -19,7 +19,7 @@ export default function CameraScreen({ navigation }) {
   const isActive = isFocused && appState === "active"
   const { resize } = useResizePlugin();
 
-  const objectDetection = useTensorflowModel(require('../assets/mobilenet.tflite'))
+  const objectDetection = useTensorflowModel(require('../../assets/mobilenet.tflite'))
   const model =
     objectDetection.state === 'loaded' ? objectDetection.model : undefined
 
