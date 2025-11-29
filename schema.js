@@ -128,3 +128,22 @@ export const fetchItemFromDatabase = async (id, db) => {
         throw err;
     }
 }
+
+export const fetchIdWithName = async (name, db) => {
+    console.log("NAME: " + name);
+
+    if (!name) return null;
+
+    try {
+        const result = await db.getAllAsync('SELECT id FROM ingredient where name = ?;', name);
+
+        if (result && result.length > 0) {
+            return result[0].id;
+        } else {
+            return null;
+        }
+    } catch (error) {
+        console.error('Database fetch failed for name:', name, error);
+        throw error;
+    }
+} 

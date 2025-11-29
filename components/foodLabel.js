@@ -1,6 +1,7 @@
 import { View, Text, Image, StyleSheet } from 'react-native';
 
-export function FoodLabel({ itemData, id }) {
+export function FoodLabel({ itemData, showLongImageUrl }) {
+
     if (!itemData) {
         return <Text>No item data to display on label.</Text>;
     }
@@ -41,7 +42,7 @@ export function FoodLabel({ itemData, id }) {
             <View style={styles.separator} />
 
             {image && (
-                id ? (
+                showLongImageUrl ? (
                     <Image
                         source={{ uri: image }}
                         style={styles.itemImage}

@@ -3,37 +3,39 @@ import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Button } from 'r
 import { fetchItemId, fetchItemData } from '../utils';
 import { FoodLabel } from './foodLabel';
 import * as SQLite from 'expo-sqlite';
-import { fetchItemFromDatabase, saveToDatabase } from '../schema';
+import { fetchIdWithName, fetchItemFromDatabase, saveToDatabase } from '../schema';
 
 export default function DataScreen({ route, navigation }) {
     const params = route?.params || {};
     const item = params.result;
-    const itemId = params.itemId || null;
+    const idFromParams = params.itemId || null;
 
     const parsedItem = item.split('(')[0].split(",")[0].trim();
 
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [showLongImageUrl, setShowLongImageUrl] = useState(false);
 
     const db = SQLite.openDatabaseSync('ingredientdb');
 
     const saveItem = () => {
         saveToDatabase(data, db)
             .catch(err => console.error('Save error:', err))
-            .finally(db.closeSync());
+            .finally(() => db.closeSync());
         navigation.navigate('Main', { screen: 'Home' });
     }
 
-    const fetchItem = async () => {
+    const fetchItem = async (id) => {
         if (!db) {
             console.error('DB not available');
             setError('Local database unavailable.');
             setLoading(false);
             return;
         }
+
         try {
-            const data = await fetchItemFromDatabase(itemId, db);
+            const data = await fetchItemFromDatabase(id, db);
             setData(data);
         } catch (err) {
             console.error('Local DB fetch error:', err);
@@ -43,6 +45,27 @@ export default function DataScreen({ route, navigation }) {
             db.closeSync();
         }
     };
+
+    async function processItem(parsedItem, db, isMounted) {
+        try {
+            const id = await fetchIdWithName(parsedItem, db);
+
+            if (!id) {
+                if (!isMounted) return;
+                const _id = await fetchItemId(parsedItem);
+                if (!isMounted) return;
+                const itemData = await fetchItemData(_id);
+                setData(itemData);
+            } else {
+                setShowLongImageUrl(true);
+                fetchItem(id);
+            }
+
+        } catch (err) {
+            console.error('fetchItemId error:', err);
+            return null;
+        }
+    }
 
     useEffect(() => {
 
@@ -57,22 +80,20 @@ export default function DataScreen({ route, navigation }) {
             try {
                 setLoading(true);
                 setError(null);
-                if (itemId) {
-                    fetchItem();
+
+                if (idFromParams) {
+                    fetchItem(idFromParams);
+                    setShowLongImageUrl(true);
                     return;
                 }
-                const id = await fetchItemId(parsedItem);
-                if (!isMounted) return;
-                const itemData = await fetchItemData(id);
-                if (!isMounted) return;
-                setData(itemData);
+                processItem(parsedItem, db, isMounted);
 
             } catch (err) {
                 console.error('Failed to load item data:', err);
                 setError('Failed to load data. Please check your utilities.');
                 setData(null);
             } finally {
-                if (isMounted && !itemId) {
+                if (isMounted && !idFromParams) {
                     setLoading(false);
                 }
             }
@@ -81,7 +102,7 @@ export default function DataScreen({ route, navigation }) {
         loadItemData();
 
         return () => { isMounted = false; };
-    }, [parsedItem, itemId]);
+    }, [parsedItem, idFromParams]);
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
@@ -94,8 +115,8 @@ export default function DataScreen({ route, navigation }) {
                 <Text style={styles.errorText}>❌ {error}</Text>
             ) : data ? (
                 <>
-                    <FoodLabel itemData={data} id={itemId}/>
-                    {!itemId && <Button
+                    <FoodLabel itemData={data} showLongImageUrl={showLongImageUrl} />
+                    {!idFromParams && <Button
                         title='Save'
                         onPress={() => saveItem()}
                     />}

@@ -3,7 +3,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SearchScreen from './components/SearchScreen';
 import HomeScreen from './components/HomeScreen';
-import DataScreen from './components/DataScreen';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import CameraScreen from './components/CameraScreen';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
@@ -11,27 +10,11 @@ import { createDatabase } from './schema';
 import * as SQLite from "expo-sqlite";
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View, Text } from 'react-native';
+import DataScreen from './components/DataScreen';
 
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-
-function Tabs() {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
-          let iconName = route.name === 'Home' ? 'home' : route.name === 'Search' ? 'search' : route.name === 'Camera' ? 'camera' : 'data';
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-      })}>
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Search" component={SearchScreen} />
-      <Tab.Screen name="Camera" component={CameraScreen} />
-      <Tab.Screen name="Data" component={DataScreen} />
-    </Tab.Navigator>
-  );
-}
 
 const initialize = async (db) => {
 
@@ -63,6 +46,31 @@ export default function App() {
         <ActivityIndicator size="large" />
         <Text style={{ marginTop: 10 }}>Initializing database...</Text>
       </View>
+    );
+  }
+
+  function Tabs() {
+    return (
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ color, size }) => {
+            let iconName;
+            if (route.name === 'Home') {
+              iconName = 'home';
+            } else if (route.name === 'Search') {
+              iconName = 'search';
+            } else if (route.name === 'Camera') {
+              iconName = 'camera';
+            } else {
+              iconName = 'help';
+            }
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+        })}>
+        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Search" component={SearchScreen} />
+        <Tab.Screen name="Camera" component={CameraScreen} />
+      </Tab.Navigator>
     );
   }
 
