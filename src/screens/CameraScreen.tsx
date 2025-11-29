@@ -65,7 +65,7 @@ export default function CameraScreen({ navigation }) {
   }
 
   const scan = () => {
-    navigation.navigate('DataScreen', { result });
+    navigation.navigate('SearchScreen', { result });
   }
 
   return (

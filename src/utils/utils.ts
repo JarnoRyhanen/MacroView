@@ -46,12 +46,12 @@ export const getBestPrediction = (outputArray, labels) => {
 
 const apiKey = process.env.EXPO_PUBLIC_API_KEY;
 
-export const fetchItemId = async (item) => {
+export const fetchItemId = async (item, amount) => {
     try {
-        const response = await fetch(`https://api.spoonacular.com/food/ingredients/search?query=${item}&apiKey=${apiKey}&sortDirection=asc&number=1`);
+        const response = await fetch(`https://api.spoonacular.com/food/ingredients/search?query=${item}&apiKey=${apiKey}&sortDirection=asc&number=${amount}`);
         if (!response.ok) throw new Error("Error in fetch:" + response.statusText);
         const data = await response.json();
-        return data.results[0].id;
+        return data.results;
     } catch (error) {
         console.error(error);
         throw error;

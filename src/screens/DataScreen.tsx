@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Button } from 'react-native';
-import { fetchItemId, fetchItemData } from '../utils/utils';
+import { fetchItemData } from '../utils/utils';
 import { FoodLabel } from '../components/foodLabel';
 import * as SQLite from 'expo-sqlite';
-import { fetchIdWithName, fetchItemFromDatabase, saveToDatabase } from '../utils/schema';
+import { fetchIdWithNameFromDb, fetchItemFromDatabase, saveToDatabase } from '../utils/schema';
 
 export default function DataScreen({ route, navigation }) {
     const params = route?.params || {};
     const item = params.result;
     const idFromParams = params.itemId || null;
+    const fetchFromApi = params.fetchFromApi;
 
     const parsedItem = item.split('(')[0].split(",")[0].trim();
 
@@ -26,7 +27,7 @@ export default function DataScreen({ route, navigation }) {
         navigation.navigate('Main', { screen: 'Home' });
     }
 
-    const fetchItem = async (id) => {
+    const fetchFromDb = async (id) => {
         if (!db) {
             console.error('DB not available');
             setError('Local database unavailable.');
@@ -48,17 +49,21 @@ export default function DataScreen({ route, navigation }) {
 
     async function processItem(parsedItem, db, isMounted) {
         try {
-            const id = await fetchIdWithName(parsedItem, db);
+            const idFromDb = await fetchIdWithNameFromDb(parsedItem, db);
 
-            if (!id) {
-                if (!isMounted) return;
-                const _id = await fetchItemId(parsedItem);
-                if (!isMounted) return;
-                const itemData = await fetchItemData(_id);
-                setData(itemData);
-            } else {
+            // If item with idFromDb already exists in the database, load from there
+            if (idFromDb) {
                 setShowLongImageUrl(true);
-                fetchItem(id);
+                fetchFromDb(idFromDb);
+                return;
+            }
+
+            // If item has id provided from params, but does not exist in database, fetch from api, uses 1 call
+            if (idFromParams) {
+                if (!isMounted) return;
+                const itemData = await fetchItemData(idFromParams);
+                setData(itemData);
+                return;
             }
 
         } catch (err) {
@@ -81,11 +86,12 @@ export default function DataScreen({ route, navigation }) {
                 setLoading(true);
                 setError(null);
 
-                if (idFromParams) {
-                    fetchItem(idFromParams);
+                if (!fetchFromApi) {
+                    fetchFromDb(idFromParams);
                     setShowLongImageUrl(true);
                     return;
                 }
+
                 processItem(parsedItem, db, isMounted);
 
             } catch (err) {
@@ -93,7 +99,7 @@ export default function DataScreen({ route, navigation }) {
                 setError('Failed to load data. Please check your utilities.');
                 setData(null);
             } finally {
-                if (isMounted && !idFromParams) {
+                if (isMounted && fetchFromApi) {
                     setLoading(false);
                 }
             }
@@ -116,7 +122,7 @@ export default function DataScreen({ route, navigation }) {
             ) : data ? (
                 <>
                     <FoodLabel itemData={data} showLongImageUrl={showLongImageUrl} />
-                    {!idFromParams && <Button
+                    {fetchFromApi && <Button
                         title='Save'
                         onPress={() => saveItem()}
                     />}

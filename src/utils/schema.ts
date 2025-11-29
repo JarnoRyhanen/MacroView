@@ -129,7 +129,7 @@ export const fetchItemFromDatabase = async (id, db) => {
     }
 }
 
-export const fetchIdWithName = async (name, db) => {
+export const fetchIdWithNameFromDb = async (name, db) => {
     console.log("NAME: " + name);
 
     if (!name) return null;

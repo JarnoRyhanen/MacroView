@@ -79,6 +79,7 @@ export default function App() {
       <Stack.Navigator>
         <Stack.Screen name="Main" component={Tabs} options={{ headerShown: false }} />
         <Stack.Screen name="DataScreen" component={DataScreen} options={{ title: 'Item Details' }} />
+        <Stack.Screen name="SearchScreen" component={SearchScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
