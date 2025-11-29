@@ -26,7 +26,7 @@ export default function CameraScreen({ navigation }) {
   const calculateResult = useRunOnJS((outputs) => {
     const result = getBestPrediction(outputs[0], labels);
     setResult(result);
-  });
+  }, [labels]);
 
   const frameProcessor = useFrameProcessor(
     (frame) => {

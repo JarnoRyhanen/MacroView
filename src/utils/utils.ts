@@ -1,4 +1,4 @@
-import labels from "../..//assets/imagenet_labels.json";
+import labels from "../../assets/imagenet_labels.json";
 
 export const loadLabels = () => {
     try {
