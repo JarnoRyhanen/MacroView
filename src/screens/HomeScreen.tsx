@@ -1,13 +1,14 @@
-import { FlatList, StyleSheet, Text, View, Image, Alert, RefreshControl, TouchableOpacity } from 'react-native';
+import { FlatList, StyleSheet, Text, View, Alert, RefreshControl } from 'react-native';
 import * as SQLite from "expo-sqlite";
 import { useEffect, useState } from 'react';
 import { IngredientCard } from '../components/ingredientCard';
+
+const db = SQLite.openDatabaseSync('ingredientdb');
 
 export default function HomeScreen({ navigation }) {
 
   const [data, setData] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-  const db = SQLite.openDatabaseSync('ingredientdb');
 
   useEffect(() => {
     updateList();
