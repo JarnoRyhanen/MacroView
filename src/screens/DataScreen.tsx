@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Button } from 'react-native';
+import { useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Button, Alert } from 'react-native';
+import * as SQLite from 'expo-sqlite';
 import { fetchItemData } from '../utils/utils';
 import { FoodLabel } from '../components/foodLabel';
-import * as SQLite from 'expo-sqlite';
 import { fetchIdWithNameFromDb, fetchItemFromDatabase, saveToDatabase } from '../utils/schema';
+
+const db = SQLite.openDatabaseSync('ingredientdb');
 
 export default function DataScreen({ route, navigation }) {
     const params = route?.params || {};
@@ -16,99 +18,114 @@ export default function DataScreen({ route, navigation }) {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [idFromDb, setIdFromDb] = useState(null);
     const [showLongImageUrl, setShowLongImageUrl] = useState(false);
 
-    const db = SQLite.openDatabaseSync('ingredientdb');
-
-    const saveItem = () => {
-        saveToDatabase(data, db)
-            .catch(err => console.error('Save error:', err))
-            .finally(() => db.closeSync());
-        navigation.navigate('Main', { screen: 'Home' });
-    }
-
-    const fetchFromDb = async (id) => {
-        if (!db) {
-            console.error('DB not available');
-            setError('Local database unavailable.');
-            setLoading(false);
+    const saveItem = useCallback(() => {
+        if (!data) {
+            Alert.alert('Error', 'No data to save.');
             return;
         }
 
-        try {
-            const data = await fetchItemFromDatabase(id, db);
-            setData(data);
-        } catch (err) {
-            console.error('Local DB fetch error:', err);
-            setError('Failed to load item from saved list.');
-        } finally {
-            setLoading(false);
-            db.closeSync();
-        }
-    };
+        saveToDatabase(data, db)
+            .then(() => {
+                Alert.alert('Success', `${data.name} saved successfully!`);
+            })
+            .catch(err => {
+                console.error('Save error:', err);
+                Alert.alert('Error', 'Failed to save item to local database.');
+            })
+            .finally(() => {
+                navigation.navigate('Main', { screen: 'Home' });
+            });
+    }, [data, navigation]);
 
-    async function processItem(parsedItem, db, isMounted) {
-        try {
-            const idFromDb = await fetchIdWithNameFromDb(parsedItem, db);
-
-            // If item with idFromDb already exists in the database, load from there
-            if (idFromDb) {
-                setShowLongImageUrl(true);
-                fetchFromDb(idFromDb);
-                return;
-            }
-
-            // If item has id provided from params, but does not exist in database, fetch from api, uses 1 call
-            if (idFromParams) {
-                if (!isMounted) return;
-                const itemData = await fetchItemData(idFromParams);
-                setData(itemData);
-                return;
-            }
-
-        } catch (err) {
-            console.error('fetchItemId error:', err);
-            return null;
-        }
-    }
-
-    useEffect(() => {
-
+    const fetchData = useCallback(async () => {
         if (!item) {
             setData(null);
+            setError('No item information provided.');
             return;
         }
 
-        let isMounted = true;
+        setLoading(true);
+        setError(null);
 
-        const loadItemData = async () => {
+        const fetchFromDb = async (id) => {
             try {
-                setLoading(true);
-                setError(null);
-
-                if (!fetchFromApi) {
-                    fetchFromDb(idFromParams);
+                const itemData = await fetchItemFromDatabase(id, db);
+                if (itemData) {
+                    setData(itemData);
                     setShowLongImageUrl(true);
-                    return;
+                } else {
+                    throw new Error("Item not found in local database.");
                 }
-
-                processItem(parsedItem, db, isMounted);
-
             } catch (err) {
-                console.error('Failed to load item data:', err);
-                setError('Failed to load data. Please check your utilities.');
+                console.error('Local DB fetch error:', err);
+                setError('Failed to load item from saved list.');
                 setData(null);
-            } finally {
-                if (isMounted && fetchFromApi) {
-                    setLoading(false);
-                }
+                throw err;
             }
         };
 
-        loadItemData();
+        const fetchFromApi = async (id) => {
+            try {
+                const itemData = await fetchItemData(id);
+                setData(itemData);
+            } catch (err) {
+                console.error('API fetch error:', err);
+                setError('Failed to fetch item data from the external API.');
+                setData(null);
+                throw err;
+            }
+        }
 
-        return () => { isMounted = false; };
-    }, [parsedItem, idFromParams]);
+        try {
+            if (!fetchFromApi) {
+                await fetchFromDb(idFromParams);
+                return;
+            }
+
+            if (fetchFromApi) {
+                const idFromDb = await fetchIdWithNameFromDb(parsedItem, db);
+                setIdFromDb(idFromDb);
+
+                // If item with idFromDb already exists in the database, load from there
+                if (idFromDb) {
+                    await fetchFromDb(idFromDb);
+                    return;
+                }
+
+                // If item has id provided from params, but does not exist in database, fetch from api, uses 1 api call
+                if (idFromParams) {
+                    await fetchFromApi(idFromParams);
+                    return;
+                }
+                setError('Could not find item data. Missing ID for API fetch.');
+            }
+
+        } catch (err) {
+            console.log('Final data fetch failed.');
+        } finally {
+            setLoading(false);
+        }
+    }, [item, parsedItem, idFromParams, fetchFromApi]);
+
+    useEffect(() => {
+        let isCancelled = false;
+        const runFetch = async () => {
+            try {
+                await fetchData();
+            } catch (error) {
+                if (isCancelled) return;
+            }
+        };
+
+        runFetch();
+        return () => {
+            isCancelled = true;
+        };
+
+    }, [fetchData]);
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
@@ -122,14 +139,16 @@ export default function DataScreen({ route, navigation }) {
             ) : data ? (
                 <>
                     <FoodLabel itemData={data} showLongImageUrl={showLongImageUrl} />
-                    {fetchFromApi && <Button
-                        title='Save'
-                        onPress={() => saveItem()}
-                    />}
-
+                    {(fetchFromApi && !idFromDb) &&
+                        <Button
+                            title='Save Item'
+                            onPress={saveItem}
+                            color="#4CAF50"
+                        />
+                    }
                 </>
             ) : (
-                <Text>No item provided.</Text>
+                <Text>No item data is available.</Text>
             )}
         </ScrollView>
     );
